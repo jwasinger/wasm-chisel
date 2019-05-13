@@ -66,11 +66,55 @@ fn deployer_code() -> Vec<u8> {
     .unwrap()
 }
 
+
+/*
+(module
+  (import "ethereum" "getCodeSize" (func $getCodeSize (result i32)))
+  (import "ethereum" "codeCopy" (func $codeCopy (param i32 i32 i32)))
+  (import "ethereum" "storageStore" (func $storageStore (param i32 i32)))
+  (import "ethereum" "finish" (func $finish (param i32 i32)))
+  (data (i32.const 0)  "\30\78\65\44\30\39\33\37\35\44\43\36\42\32\30\30\35\30\64\32\34\32\64\31\36\31\31\61\66\39\37\65\45\34\41\36\45\39\33\43\41\64\0a") ;; address that is prefunded
+  (data (i32.const 32)  "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00") ;; prefunded account amount 
+  (memory 1)
+  (export "memory" (memory 0))
+  (export "main" (func $main))
+  (func $main
+    ;; load total code size
+    (local $size i32)
+    (local $payload_offset i32)
+    (local $payload_size i32)
+    (set_local $size (call $getCodeSize))
+
+    ;; copy entire thing into memory at offset 0
+    (call $codeCopy (i32.const 0) (i32.const 0) (get_local $size))
+
+    ;; retrieve payload size (the last 4 bytes treated as a little endian 32 bit number)
+    (set_local $payload_size (i32.load (i32.sub (get_local $size) (i32.const 4))))
+
+    ;; start offset is calculated as $size - 4 - $payload_size + 32 (prefunded address length) + 32 (prefunded amount storage key length)
+    (set_local $payload_offset (i32.sub (i32.add (get_local $size) (i32.const 60)) (get_local $payload_size)))
+
+    (call $storageStore (i32.const 0) (i32.const 32))
+
+    ;; return the payload
+    (call $finish (get_local $payload_offset) (get_local $payload_size))
+  )
+)
+*/
+fn wrc20_deployer_code() -> Vec<u8> {
+    FromHex::from_hex(
+        "
+    0061736d010000000113046000017f60037f7f7f0060027f7f0060000002560408657468657265756d0b676574436f646553697a65000008657468657265756d08636f6465436f7079000108657468657265756d0c73746f7261676553746f7265000208657468657265756d0666696e6973680002030201030503010001071102066d656d6f72790200046d61696e00040a32013001037f100021004100410020001001200041046b28020021022000413c6a20026b21014100412010022001200210030b0b61020041000b2b3078654430393337354443364232303035306432343264313631316166393765453441364539334341640a0041200b2b00000000000000000000000000000000000000000100000000000000000000000000000000000000000000
+    ",
+    )
+    .unwrap()
+}
+
 /// Returns a module which contains the deployable bytecode as a custom section.
 fn create_custom_deployer(payload: &[u8]) -> Module {
     // The standard deployer code, which expects a 32 bit little endian as the trailing content
     // immediately following the payload, placed in a custom section.
-    let code = deployer_code();
+    let code = wrc20_deployer_code();
 
     // This is the pre-written deployer code.
     let mut module: Module = parity_wasm::deserialize_buffer(&code).expect("Failed to load module");
