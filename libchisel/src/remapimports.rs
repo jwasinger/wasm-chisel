@@ -160,6 +160,26 @@ impl ModulePreset for Translations {
                         ImportPair::new("env", "ethereum_selfDestruct"),
                         ImportPair::new("ethereum", "selfDestruct"),
                     ),
+                    (
+                        ImportPair::new("env", "debug_print32"),
+                        ImportPair::new("debug", "print32"),
+                    ),
+                    (
+                        ImportPair::new("env", "debug_printMem"),
+                        ImportPair::new("debug", "printMem"),
+                    ),
+                    (
+                        ImportPair::new("env", "debug_printMemHex"),
+                        ImportPair::new("debug", "printMemHex"),
+                    ),
+                    (
+                        ImportPair::new("env", "debug_printStorage"),
+                        ImportPair::new("debug", "printStorage"),
+                    ),
+                    (
+                        ImportPair::new("env", "debug_printStorageHex"),
+                        ImportPair::new("debug", "printStorageHex"),
+                    ),
                 ]
                 .iter()
                 .cloned()
